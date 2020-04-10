@@ -1,6 +1,13 @@
 # Keithley2400Footswitch
 Arduino program to control a ProMicro that interfaces a Keithley over serial and outputs numbers when footswitch is pressed
 
+## Branch Specifics
+This branch, return-enabled, will enter the numbers as a keyboard that
+come from the display enabled measurement on the Keithley. In other
+words, to return ohms, select the ohms measurement before pressing the
+footswitch. To return volts, select volts measurmeent on the Keithley
+before pressing the footswitch.
+
 ## DESCRIPTION
 Reads data from Keithley 2400 SourceMeter instrument and sends 
 to keyboard when footswitch is pressed. So can focus on probing and
@@ -13,15 +20,22 @@ processor selected by mistake and keyboard access did not work.
 Board: [Sparkfun Pro Micro](https://www.sparkfun.com/products/12640)</br>
 Processor: ATmega32U4 (5V, 16 MHz) </br>
 
-## Customize
-There are several notes and defines in the code for different desired modes like sweeping voltage and current. Modify as desired before building.
+## Customize There are several notes and defines in the code for
+different desired modes like sweeping voltage and current. Modify as
+desired before building.
 
-## Libraries
-Will need the Sparkfun board library. Installation instructions are available here: https://github.com/sparkfun/Arduino_Boards
+## Libraries Will need the Sparkfun board library. Installation
+instructions are available here:
+https://github.com/sparkfun/Arduino_Boards
 
-`ClickButton` library is included in this repository but need to install it in your Arduino Sketchbook folder. See [instructions](https://www.arduino.cc/en/guide/libraries) under the `Manual installation` section.
+`ClickButton` library is included in this repository but need to
+install it in your Arduino Sketchbook folder. See
+[instructions](https://www.arduino.cc/en/guide/libraries) under the
+`Manual installation` section.
 
-Also uses the somewhat standard `Keyboard` library for acting like a USB Keyboard in order to send data to computer. That should come with the Arduino software install.
+Also uses the somewhat standard `Keyboard` library for acting like a
+USB Keyboard in order to send data to computer. That should come with
+the Arduino software install.
 
 ## Build
 Use the Arduino IDE to compile and download to the Sparkfun Pro Micro.
