@@ -19,9 +19,9 @@ There are several notes and defines in the code for different desired modes like
 ## Libraries
 Will need the Sparkfun board library. Installation instructions are available here: https://github.com/sparkfun/Arduino_Boards
 
-ClickButton library is included in this repository but need to install it in your Arduino Sketchbook folder. See [instructions](https://www.arduino.cc/en/guide/libraries) under the `Manual installation` section.
+`ClickButton` library is included in this repository but need to install it in your Arduino Sketchbook folder. See [instructions](https://www.arduino.cc/en/guide/libraries) under the `Manual installation` section.
 
-Also uses the somewhat standard Keyboard library for acting like a USB Keyboard in order to send data to computer. That should come with the Arduino software install.
+Also uses the somewhat standard `Keyboard` library for acting like a USB Keyboard in order to send data to computer. That should come with the Arduino software install.
 
 ## Build
 Use the Arduino IDE to compile and download to the Sparkfun Pro Micro.
