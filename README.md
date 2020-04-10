@@ -2,11 +2,8 @@
 Arduino program to control a ProMicro that interfaces a Keithley over serial and outputs numbers when footswitch is pressed
 
 ## Branch Specifics
-This branch, return-enabled, will enter the numbers as a keyboard that
-come from the display enabled measurement on the Keithley. In other
-words, to return ohms, select the ohms measurement before pressing the
-footswitch. To return volts, select volts measurmeent on the Keithley
-before pressing the footswitch.
+Main Branch
+
 
 ## DESCRIPTION
 Reads data from Keithley 2400 SourceMeter instrument and sends 
