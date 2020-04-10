@@ -10,7 +10,7 @@ IMPORTANT: Be sure to have the correct Board (Sparkfun Pro Micro) AND
 Processor (5V, 16 MHz) selected in the Arduino IDE. I once had 3.3V, 8 MHz
 processor selected by mistake and keyboard access did not work.
 
-Board: Sparkfun Pro Micro</br>
+Board: [Sparkfun Pro Micro](https://www.sparkfun.com/products/12640)</br>
 Processor: ATmega32U4 (5V, 16 MHz) </br>
 
 ## Customize
