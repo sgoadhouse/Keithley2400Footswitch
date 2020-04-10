@@ -33,11 +33,16 @@
 // set to 0 for no debugging. 
 // set to 1 for minimal debug output to Serial console
 // set to higher values for even more debugging output
-#define DEBUG (0)  
+#define DEBUG (3)  
 
 //
 // NOTE: Search for "CHANGE ME" for places where can change the output format
 //
+
+// Number of readings to take and average over (Keithley does the averaging)
+#define NSAMPLES 10
+#define str(x) #x
+#define xstr(s) str(s)
 
 // If want to Sweep Current, change MODE_SWEEP to a positive, non-0 value and it will sweep that many measurements
 // If want to Sweep Voltage, change MODE_SWEEP to a negative, non-0 value and it will sweep that many measurements
@@ -86,6 +91,7 @@ const int UNITS_UNKN=-1;
 const int UNITS_AUTO=0;
 const int UNITS_VOLT=1;
 const int UNITS_CURR=2;
+const int UNITS_OHMS=3;
 
 //void keyMeasurementString (String text) {
 //    Keyboard.begin(); // start keyboard control
@@ -171,10 +177,16 @@ void keyMeasurement (float data, int units) {
       }
       datastr[idx++] = ' ';
       datastr[idx++] = prf;
-      if (units == UNITS_CURR) {
-       datastr[idx++] = 'A';
-      } else {
-       datastr[idx++] = 'V';      
+
+      switch (units) {
+      case UNITS_CURR:
+	datastr[idx++] = 'A';
+	break;
+      case UNITS_OHMS:
+	//datastr[idx++] = ' ';	// cannot send Omega with char array, but its okay
+	break;
+      default:
+	datastr[idx++] = 'V';      
       }
 
       // terminate the string
@@ -222,7 +234,7 @@ int read_line(char* buffer, int bufsize)
   return -1; // error: return negative one to indicate the input was too long
 }
 
-void decodeMeasurement(char *line, int &measureType, float &volt, float &curr) {
+void decodeMeasurement(char *line, int &measureType, float &volt, float &curr, float &res) {
   char *strp = line;
   boolean stop = false;
   const int NUMBER_DATA = 5;
@@ -260,6 +272,7 @@ void decodeMeasurement(char *line, int &measureType, float &volt, float &curr) {
     // wrong number of values, so return NaN
     volt = DATA_NaN;
     curr = DATA_NaN;
+    res = DATA_NaN;
     return;
   }
 
@@ -275,6 +288,7 @@ void decodeMeasurement(char *line, int &measureType, float &volt, float &curr) {
   // Check the status. 
   // If mode is _AUTO and Voltage is being measured, return voltage (first data). 
   // If mode is _AUTO and current is being measured, return current (second data).
+  // If mode is _AUTO and resistance is being measured, return resistance (third data).
   // Otherwise, return the requested value and always return which value is being returned.
   unsigned long status = (unsigned long) data[4];
 
@@ -314,18 +328,24 @@ void decodeMeasurement(char *line, int &measureType, float &volt, float &curr) {
     if (status & 0x000010L) Serial.println("Status - OVER-VOLTAGE!");
     if (status & 0x000800L) Serial.println("Status - Voltage Measurement");
     if (status & 0x001000L) Serial.println("Status - Current Measurement");
+    if (status & 0x002000L) Serial.println("Status - Resistance Measurement");
     if (status & 0x004000L) Serial.println("Status - Voltage SOURCED");
     if (status & 0x008000L) Serial.println("Status - Current SOURCED");
   }
 
   volt = data[0]; // return voltage value
   curr = data[1]; // return current value
-  
-  if (status & 0x001000L) {
+  res  = data[2]; // return resistance value
+
+  if (status & 0x002000L) {
+    // Resistance Measurement enabled - must check this first because
+    // both Resistance and Current Measurements can be true
+    measureType = UNITS_OHMS; // let caller know that resistance was measured
+  } else if (status & 0x001000L) {
     // Current Measurement enabled
     measureType = UNITS_CURR; // let caller know that current was measured
   } else {
-    // Current Measurement is not enabled so default to voltage
+    // Current nor Resistance being measured so default to voltage
     measureType = UNITS_VOLT; // let caller know that voltage was (likely) measured
   }
 
@@ -349,8 +369,7 @@ void setupInstrument() {
   Serial1.print(":TRIG:COUN 1\n"); // set Trigger Count = 1
   Serial1.print(":TRIG:SOUR IMM\n"); // set Trigger Source = Immediate
   Serial1.print(":SENS:AVER:TCON REP\n"); // Repeating Filter mode
-  //@@@Serial1.print(":SENS:AVER:COUNT 16\n"); // Average over 16 readings
-  Serial1.print(":SENS:AVER:COUNT 10\n"); // Average over 10 readings
+  Serial1.print(":SENS:AVER:COUNT " xstr(NSAMPLES) "\n"); // Average over NSAMPLES readings
   //@@@Serial1.print(":SENS:AVER ON\n"); // Enable Filter mode - should see FILT on display
   Serial1.print(":SENS:AVER OFF\n"); // Disable Filter mode - let user manually enable if desired
   Serial1.print(":SENS:CURR:RANG:AUTO ON\n"); // Enable Auto Range Mode for Current Measurement 
@@ -430,12 +449,11 @@ void setup() {
   
 }
 
-// When detect the falling edge of the footswitch, 
-// tell the Keithley 2400 instrument to enable its 
-// output, read 16 values, average them and return. 
-// Then send this value to the keyboard to be input
-// into a spreadsheet or what ever document has the 
-// keyboard focus.
+// When detect the falling edge of the footswitch, tell the Keithley
+// 2400 instrument to enable its output, read a number of values,
+// average them over NSAMPLES and return.  Then send this value to the
+// keyboard to be input into a spreadsheet or what ever document has
+// the keyboard focus.
 void loop() {
   char line[LINE_BUFFER_SIZE];
    
@@ -571,14 +589,20 @@ void loop() {
       digitalWrite(LED_PIN, LOW ); // RX LED ON
 
       int measureType;
-      float volt, curr, data;
+      float volt, curr, res, data;
       
-      decodeMeasurement(line, measureType, volt, curr);
+      decodeMeasurement(line, measureType, volt, curr, res);
 
       // copy the measured value to data
-      if (measureType == UNITS_CURR) {
+      switch (measureType) {
+      case UNITS_CURR:
         data = curr;
-      } else {
+	break;
+      case UNITS_OHMS:
+	data = res;
+	break;
+      default:
+	// default to volts
         data = volt;
       }
 
