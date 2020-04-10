@@ -33,7 +33,7 @@
 // set to 0 for no debugging. 
 // set to 1 for minimal debug output to Serial console
 // set to higher values for even more debugging output
-#define DEBUG (3)  
+#define DEBUG (0)  
 
 //
 // NOTE: Search for "CHANGE ME" for places where can change the output format
